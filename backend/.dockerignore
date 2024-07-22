@@ -1,0 +1,8 @@
+node_modules
+tests
+commitlint.config.js
+.prettierrc.json
+nodemon.json
+jest.config.js
+.github
+.env.example

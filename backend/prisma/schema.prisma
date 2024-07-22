@@ -1,0 +1,225 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URI")
+}
+
+model Usuario {
+  usuarioID           Int                   @id @default(autoincrement())
+  usuarioNome         String                @db.VarChar(255)
+  usuarioEmail        String                @unique @db.VarChar(100)
+  usuarioTelefone     String?               @unique @db.VarChar(30)
+  usuarioNascimento   String?               @db.VarChar(10)
+  usuarioSenha        String                @db.VarChar(300)
+  usuarioPermissions  String[]              @default(["default"])
+  usuarioContaAtivada Boolean               @default(false)
+  usuarioRefreshToken String?               @db.VarChar(300)
+  createdAt           DateTime?             @default(now()) @db.Timestamptz(6)
+  updatedAt           DateTime?             @default(now()) @db.Timestamptz(6)
+  Admins              Admin?
+  AlunoTurmas         AlunoTurmas[]
+  Alunos              Aluno?
+  ArtigoStars         ArtigoStars[]
+  Artigos             Artigo[]
+  Professor           Professor?
+  UsuarioDiscordInfo  UsuarioDiscordInfo[]
+  Chamadas            AlunoChamada[]        @relation("AlunoChamadaToUsuario")
+  OlimpiadasInscritos OlimpiadasInscritos[]
+
+  @@map("Usuarios")
+}
+
+model ProfessorTurmas {
+  professorTurmasID Int       @id @default(autoincrement())
+  professorID       Int
+  turmaID           Int
+  Professor         Professor @relation(fields: [professorID], references: [professorID])
+  Turma             Turma     @relation(fields: [turmaID], references: [turmaID])
+}
+
+model Professor {
+  professorID      Int               @id @default(autoincrement())
+  usuarioID        Int               @unique
+  professorMateria Int
+  created_at       DateTime          @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime          @default(now()) @db.Timestamptz(6)
+  Chamada          Chamada?
+  ProfessorTurmas  ProfessorTurmas[]
+  Materia          Materia           @relation(fields: [professorMateria], references: [materiaID])
+  Usuarios         Usuario           @relation(fields: [usuarioID], references: [usuarioID])
+
+  @@map("Professores")
+}
+
+model Admin {
+  adminID   Int      @id @default(autoincrement())
+  usuarioID Int      @unique
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @default(now()) @db.Timestamptz(6)
+  Usuario   Usuario  @relation(fields: [usuarioID], references: [usuarioID])
+
+  @@map("Admins")
+}
+
+model Aluno {
+  alunoID          Int                @id @default(autoincrement())
+  usuario_ID       Int                @unique
+  created_at       DateTime?          @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime?          @default(now()) @db.Timestamptz(6)
+  AlunoTurmas      AlunoTurmas[]
+  Usuarios         Usuario            @relation(fields: [usuario_ID], references: [usuarioID])
+  CertificadoAluno CertificadoAluno[]
+
+  @@map("Alunos")
+}
+
+model AlunoTurmas {
+  alunoTurmasID Int     @id @default(autoincrement())
+  alunoID       Int
+  turmaID       Int
+  usuarioID     Int
+  Aluno         Aluno   @relation(fields: [alunoID], references: [alunoID])
+  Turma         Turma   @relation(fields: [turmaID], references: [turmaID])
+  Usuario       Usuario @relation(fields: [usuarioID], references: [usuarioID])
+}
+
+model Turma {
+  turmaID              Int               @id @default(autoincrement())
+  turmaMateria         Int
+  turmaAulasLecionadas Int               @default(0)
+  turmaAulasTotais     Int               @default(12)
+  turmaConcluida       Boolean           @default(false)
+  turmaFinalizadaAt    DateTime?         @default(now()) @db.Timestamptz(6)
+  createdAt            DateTime          @default(now()) @db.Timestamptz(6)
+  updatedAt            DateTime          @default(now()) @db.Timestamptz(6)
+  AlunoTurmas          AlunoTurmas[]
+  Certificado          Certificado[]
+  Chamadas             Chamada[]
+  ProfessorTurmas      ProfessorTurmas[]
+  Materia              Materia           @relation(fields: [turmaMateria], references: [materiaID])
+
+  @@map("Turmas")
+}
+
+model Certificado {
+  certificadoUUID  String             @unique @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  certificadoTurma Int
+  certificadoAluno Int
+  certificadoTipo  String             @default("PCC") @db.Char(3)
+  createdAt        DateTime?          @default(now()) @db.Timestamptz(6)
+  updatedAt        DateTime?          @default(now()) @db.Timestamptz(6)
+  CertificadoAluno CertificadoAluno[]
+  CertificadoTurma Turma              @relation(fields: [certificadoTurma], references: [turmaID])
+
+  @@map("Certificados")
+}
+
+model CertificadoAluno {
+  certificadoAlunoID Int         @unique @default(autoincrement())
+  alunoID            Int
+  certificadoUUID    String      @db.Uuid
+  Alunos             Aluno       @relation(fields: [alunoID], references: [alunoID])
+  Certificado        Certificado @relation(fields: [certificadoUUID], references: [certificadoUUID])
+}
+
+model AlunoChamada {
+  alunoChamadaID Int       @id @default(autoincrement())
+  Usuario        Usuario[] @relation("AlunoChamadaToUsuario")
+}
+
+model Chamada {
+  chamada_ID       Int       @id @default(autoincrement())
+  professorID      Int       @unique
+  turmaID          Int
+  chamada_objetivo String    @db.VarChar(100)
+  created_at       DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at       DateTime? @default(now()) @db.Timestamptz(6)
+  Professor        Professor @relation(fields: [professorID], references: [professorID])
+  Turmas           Turma     @relation(fields: [turmaID], references: [turmaID])
+
+  @@map("Chamadas")
+}
+
+model Materia {
+  materiaID     Int         @id @default(autoincrement())
+  materia_nome  String      @db.VarChar(255)
+  materia_alias String      @db.VarChar(255)
+  Professores   Professor[]
+  Turma         Turma[]
+
+  @@map("Materias")
+}
+
+model Token {
+  token_ID   Int       @id @default(autoincrement())
+  data       String    @db.VarChar(400)
+  type       String    @default("PRT") @db.Char(3)
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at DateTime? @default(now()) @db.Timestamptz(6)
+
+  @@map("Token")
+}
+
+model UsuarioDiscordInfo {
+  usuarioDiscordInfoID Int     @id @unique @default(autoincrement())
+  userid               String  @db.VarChar(100)
+  avatar               String  @db.VarChar(200)
+  username             String  @db.VarChar(50)
+  discriminator        String  @db.Char(4)
+  email                String  @unique @db.VarChar(200)
+  verificado           Boolean @default(false)
+  token                String  @unique @db.VarChar(150)
+  expires_in           String  @db.VarChar(200)
+  usuarioID            Int
+  usuario              Usuario @relation(fields: [usuarioID], references: [usuarioID])
+}
+
+model Artigo {
+  artigoID             Int           @id @unique @default(autoincrement())
+  artigoUUID           String        @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  artigoAutorID        Int
+  artigoTitle          String        @db.VarChar(255)
+  artigoSubtitle       String        @db.VarChar(100)
+  artigoSubdescription String        @db.VarChar(300)
+  artigoBody           String
+  artigoType           String        @db.VarChar(50)
+  publicado            Boolean       @default(false)
+  createdAt            DateTime      @default(now()) @db.Timestamptz(6)
+  ArtigoStars          ArtigoStars[]
+  Usuario              Usuario       @relation(fields: [artigoAutorID], references: [usuarioID], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("Artigos")
+}
+
+model ArtigoStars {
+  artigoStarsID Int       @id @unique
+  artigoID      Int
+  usuarioID     Int
+  createdAt     DateTime? @default(now()) @db.Timestamptz(6)
+  Artigo        Artigo    @relation(fields: [artigoID], references: [artigoID], onDelete: Cascade)
+  Usuario       Usuario   @relation(fields: [usuarioID], references: [usuarioID], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model Olimpiadas {
+  olimpiadaID          Int                   @unique @default(autoincrement())
+  olimpiadaNome        String                @db.VarChar(100)
+  olimpiadaLogo        String
+  olimpiadaDescription String
+  olimpiadaEdicao      Int
+  olimpiadaFinalizada  Boolean               @default(false)
+  createdAt            DateTime?             @default(now()) @db.Timestamptz(6)
+  OlimpiadasInscritos  OlimpiadasInscritos[]
+}
+
+model OlimpiadasInscritos {
+  olimpiadaInscritosID        Int        @unique @default(autoincrement())
+  olimpiadaID                 Int
+  olimpiadaInscritoUsuarioID  Int
+  olimpiadaInscritoNivel      Int?
+  olimpiadaInscritoTipoEscola String?
+  Olimpiada                   Olimpiadas @relation(fields: [olimpiadaID], references: [olimpiadaID])
+  Usuario                     Usuario    @relation(fields: [olimpiadaInscritoUsuarioID], references: [usuarioID])
+}
