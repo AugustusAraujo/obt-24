@@ -6,6 +6,22 @@ const routes: Array<RouteRecordRaw> = [
     path: '/',
     component: () => import("@/views/Home.vue")
   },
+  {
+    path: '/redefinir_senha',
+    component: () => import("@/views/RedefinirSenha.vue")
+  },
+  {
+    path: '/nova_conta_1',
+    component: () => import("@/views/NovaConta1.vue")
+  },
+  {
+    path: '/nova_conta_2',
+    component: () => import("@/views/NovaConta2.vue")
+  },
+  {
+    path: '/feed',
+    component: () => import("@/views/Feed.vue")
+  },
 ]
 
 const router = createRouter({
