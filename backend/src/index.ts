@@ -5,7 +5,6 @@ const cors = require('cors')
 import * as bodyParser from 'body-parser'
 import Routes from './routes'
 import * as Sentry from '@sentry/node'
-import sentry from './providers/SentryProvider/sentry'
 import { logger } from '@sentry/utils'
 require('dotenv').config()
 
@@ -31,7 +30,7 @@ prisma
     })
 
 // SENTRY MIDDLEWARE
-sentry(app)
+// sentry(app)
 
 // ROUTES
 Routes(app)

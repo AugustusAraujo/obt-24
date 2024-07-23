@@ -1,10 +1,10 @@
 import passwordService from '../../services/PasswordService'
 import usuariosService from '../../services/UsuariosService'
 import { createAcessToken, createRefreshToken } from '../../services/tokens'
-import { IUsuariosLoginDTO } from './UsuariosLoginDTO'
+import { IUsuariosLoginDTO as IUserLoginDTO } from './UserLoginDTO'
 
-export class UsuariosLoginUseCase {
-    async execute(data: IUsuariosLoginDTO): Promise<{
+export class UserLoginUseCase {
+    async execute(data: IUserLoginDTO): Promise<{
         acessToken: string
         refreshToken: string
     }> {
@@ -12,7 +12,7 @@ export class UsuariosLoginUseCase {
             const usuario = await usuariosService.findOneByEmailWithPassword({
                 email: data.email,
             })
-            if (!usuario) throw new Error('Usuário não encontrado.')
+            if (!usuario) throw new Error('Invalid user.')
 
             const match = await passwordService.comparePassword(
                 data.password,
@@ -25,7 +25,7 @@ export class UsuariosLoginUseCase {
                     refreshToken: await createRefreshToken(usuario),
                 }
             } else {
-                throw new Error('Senha incorreta.')
+                throw new Error('Invalid user.')
             }
         } catch (e) {
             throw e
